@@ -1,9 +1,15 @@
 const { response } = require("express");
 const { request } = require("express");
 const express = require("express");
+const morgan = require("morgan");
 const app = express();
 app.use(express.json());
 
+morgan.token("body", (req, res) => {
+  return JSON.stringify(req.body);
+});
+app.use(morgan("tiny"));
+app.use(morgan(":method :url :body"));
 let persons = [
   {
     name: "Ada Lovelace",
@@ -80,7 +86,6 @@ const onko = (name) => {
 
 app.post("/api/persons", (request, response) => {
   const body = request.body;
-  console.log(body);
   if (!body.name) {
     return response.status(400).json({
       error: "name missing",
