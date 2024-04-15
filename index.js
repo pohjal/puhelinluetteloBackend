@@ -4,6 +4,9 @@ const express = require("express");
 const morgan = require("morgan");
 const app = express();
 app.use(express.json());
+const cors = require("cors");
+app.use(cors());
+app.use(express.static("dist"));
 
 morgan.token("body", (req, res) => {
   return JSON.stringify(req.body);
@@ -73,11 +76,6 @@ app.get("/api/persons", (request, response) => {
   response.send(persons);
 });
 
-const PORT = 3001;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
-
 const onko = (name) => {
   return persons.some(
     (person) => person.name.toLowerCase() === name.toLowerCase()
@@ -110,4 +108,9 @@ app.post("/api/persons", (request, response) => {
       error: "name must be unique",
     });
   }
+});
+
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
