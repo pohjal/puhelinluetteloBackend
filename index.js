@@ -4,10 +4,18 @@ const { request } = require("express");
 const express = require("express");
 const morgan = require("morgan");
 const app = express();
-app.use(express.json());
 const cors = require("cors");
 app.use(cors());
 app.use(express.static("dist"));
+app.use(express.json());
+const requestLogger = (request, response, next) => {
+  console.log("Method:", request.method);
+  console.log("Path:  ", request.path);
+  console.log("Body:  ", request.body);
+  console.log("---");
+  next();
+};
+app.use(requestLogger);
 const Person = require("./models/person");
 
 morgan.token("body", (req, res) => {
@@ -34,10 +42,12 @@ app.get("/", (request, response) => {
   response.send("<h1>Hello World!</h1>");
 });
 
-app.delete("/api/persons/:id", (request, response) => {
-  Person.findByIdAndDelete(request.params.id).then((result) => {
-    response.status(204).end();
-  });
+app.delete("/api/persons/:id", (request, response, next) => {
+  Person.findByIdAndDelete(request.params.id)
+    .then((result) => {
+      response.status(204).end();
+    })
+    .catch((error) => next(error));
 });
 
 app.get("/api/persons/:id", (request, response, next) => {
@@ -53,22 +63,39 @@ app.get("/api/persons/:id", (request, response, next) => {
 });
 
 app.get("/info", (request, response) => {
-  response.send(
-    `<p>The Phonebook has ${persons.length} people!<p>` + `<p>${time()}`
-  );
+  Person.countDocuments({})
+    .then((count) => {
+      response.send(
+        `<p>The Phonebook has ${count} people!<p>` + `<p>${time()}</p>`
+      );
+    })
+    .catch((error) => {
+      console.error(error);
+      response.status(500).send("Internal Server Error");
+    });
 });
 
 app.get("/api/persons", (request, response) => {
-  Person.find({}).then((persons) => {
-    response.json(persons);
-  });
+  Person.find({})
+    .then((persons) => {
+      response.json(persons);
+    })
+    .catch((error) => next(error));
 });
 
-const onko = (name) => {
-  return persons.some(
-    (person) => person.name.toLowerCase() === name.toLowerCase()
-  );
-};
+app.put("/api/persons/:id", (request, response, next) => {
+  const body = request.body;
+  const person = {
+    name: body.name,
+    number: body.number,
+  };
+
+  Person.findByIdAndUpdate(request.params.id, person, { new: true })
+    .then((updatedPerson) => {
+      response.json(updatedPerson);
+    })
+    .catch((error) => next(error));
+});
 
 app.post("/api/persons", (request, response) => {
   const body = request.body;
