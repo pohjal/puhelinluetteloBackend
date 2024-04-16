@@ -5,5 +5,3 @@
 Dockerfile
 fly.toml
 
-fly secrets set  MONGODB_URI=mongodb+srv://leevipohja1:kissa123@cluster0.uqqdwkj.mongodb.net/puhelinluetteloApp?retryWrites=true&w=majority
-PORT=3001

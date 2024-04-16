@@ -15,28 +15,15 @@ morgan.token("body", (req, res) => {
 });
 app.use(morgan("tiny"));
 app.use(morgan(":method :url :body"));
-let persons = [
-  {
-    name: "Ada Lovelace",
-    number: "39-44-5323523",
-    id: "2",
-  },
-  {
-    id: "1",
-    name: "lassi lataajanpoika",
-    number: "1123",
-  },
-  {
-    id: "3",
-    name: "ville",
-    number: "40404040",
-  },
-  {
-    id: "4",
-    name: "Kalle keksimies",
-    number: "2212111¨",
-  },
-];
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message);
+
+  if (error.name === "CastError") {
+    return response.status(400).send({ error: "malformatted id" });
+  }
+
+  next(error);
+};
 
 const time = () => {
   const date = new Date();
@@ -48,24 +35,21 @@ app.get("/", (request, response) => {
 });
 
 app.delete("/api/persons/:id", (request, response) => {
-  const poistettavaId = request.params.id;
-  console.log(poistettavaId);
-  persons = persons.filter((person) => person.id !== poistettavaId);
-  console.log(persons);
-  response.status(204).end();
+  Person.findByIdAndDelete(request.params.id).then((result) => {
+    response.status(204).end();
+  });
 });
 
-app.get("/api/persons/:id", (request, response) => {
-  const id = request.params.id;
-  const person = persons.find((person) => person.id === id);
-  console.log(person);
-  if (person) {
-    response.json(person);
-  } else {
-    response.status(404).end();
-  }
-
-  response.send();
+app.get("/api/persons/:id", (request, response, next) => {
+  Person.findById(request.params.id)
+    .then((person) => {
+      if (person) {
+        response.json(person);
+      } else {
+        response.status(404).end();
+      }
+    })
+    .catch((error) => next(error));
 });
 
 app.get("/info", (request, response) => {
@@ -115,7 +99,7 @@ app.post("/api/persons", (request, response) => {
     response.json(savedPerson);
   });
 });
-
+app.use(errorHandler);
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
