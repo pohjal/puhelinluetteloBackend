@@ -11,7 +11,8 @@
     "build:ui": "rm -rf /Users/leevi/fullstack/part2/puhelinLuettelo/dist && cd /Users/leevi/fullstack/part2/puhelinLuettelo && npm run build && cp -R /Users/leevi/fullstack/part2/puhelinLuettelo/dist /Users/leevi/puhelinluettelo",
     "deploy": "fly deploy",
     "deploy:full": "npm run build:ui && npm run deploy",
-    "logs:prod": "fly logs"
+    "logs:prod": "fly logs",
+    "lint": "eslint ."
   },
   "author": "Leevi Pohja",
   "license": "MIT",
